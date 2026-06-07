@@ -104,7 +104,7 @@ Use the existing `screenshots/` folder and the root project explainer image for 
 ![Generate report demo](./screenshots/frontend3.png)
 
 ## 🌐 Deployment Links
-- **Live app:** `https://your-deployment-url.com`
+- **Live app:** `https://operationaldashboardcapstoneproject.lovable.app/`
 - **Demo build:** `https://your-demo-url.com`
 
 ## 🚧 Future Roadmap
@@ -115,11 +115,11 @@ Use the existing `screenshots/` folder and the root project explainer image for 
 - Add analytics dashboards and alerting rules
 
 ## 👤 Creator Information
-**Creator:** Your Name
+**Creator:** Sankalp Sharma
 
 - Portfolio: https://your-portfolio.example.com
 - LinkedIn: https://linkedin.com/in/your-profile
-- GitHub: https://github.com/your-github
+- GitHub: https://github.com/sankalpsharma01
 
 ## 📄 License
 This project is released under the **MIT License**.
