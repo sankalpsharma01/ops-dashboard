@@ -1,0 +1,292 @@
+{
+  "name": "Ops Dashboard - Report Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-report",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8ef23e0c-8de2-4023-b39a-20bd9822cbcc",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_GOOGLE_SHEETS_CACHE_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit#gid=0"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_SHEET_NAME_OR_GID",
+          "mode": "list",
+          "cachedResultName": "YOUR_GOOGLE_SHEETS_SHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "5801c2b1-aad9-4325-8bd2-7b93c8fedeea",
+      "name": "Get Daily Operations",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        304,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_OAUTH_CREDENTIAL_ID",
+          "name": "YOUR_GOOGLE_SHEETS_OAUTH_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "reports",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "report_date",
+              "fieldValue": "={{ $json.report_date }}"
+            },
+            {
+              "fieldId": "report_type",
+              "fieldValue": "={{ $json.report_type }}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ $json.title }}"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $json.content }}"
+            },
+            {
+              "fieldId": "metadata",
+              "fieldValue": "={{ $json.metadata }}"
+            }
+          ]
+        }
+      },
+      "id": "b791babd-ee00-4ad9-8c75-65789a68b08a",
+      "name": "Save to Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+          "name": "YOUR_SUPABASE_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        480,
+        208
+      ],
+      "id": "4a9d4e12-12d6-4e76-89aa-5c14c74994b0",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "YOUR_GROQ_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "report_data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        512,
+        0
+      ],
+      "id": "88c7be2c-bcff-4522-9547-2564cc40cea7",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1984,
+        0
+      ],
+      "id": "2f29357f-f179-46b7-a3c0-7517bf8f8475",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert Operations Analyst.\n\nAnalyze the operational data received from Google Sheets. \nGenerate a professional weekly operations report based on this data.\n\nData:\n{{ JSON.stringify($json.report_data) }}\n\nIMPORTANT INSTRUCTIONS:\nYou must output your response as a raw JSON object with this exact structure:\n\n{\n  \"content\": \"The full weekly operations report formatted cleanly in Markdown. Include headings for KPI Summary, Top Performers, Trends and Insights, Risks, and Recommendations.\",\n  \"metadata\": {\n    \"report_health\": \"Good, Warning, or Critical based on your analysis\",\n    \"key_metrics_extracted\": [\"metric1\", \"metric2\", \"metric3\"],\n    \"risk_factors\": [\"risk1\", \"risk2\"]\n  }\n}\n\nCRITICAL: Return ONLY the raw JSON object. Do not wrap your response in markdown code blocks (do NOT use ```json). Do not include any introductory text like \"Here is the report\" or any concluding text. Start your response immediately with the { character and end with the } character.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        816,
+        0
+      ],
+      "id": "b636e001-23d2-4bda-9fee-fd51283a9803",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "report_date",
+              "stringValue": "=={{ new Date().toISOString().split('T')[0] }}"
+            },
+            {
+              "name": "report_type",
+              "stringValue": "weekly"
+            },
+            {
+              "name": "title",
+              "stringValue": "=Weekly Operations Report - {{ $now.toFormat('MMMM dd, yyyy') }}"
+            },
+            {
+              "name": "content",
+              "stringValue": "={{ $node[\"Basic LLM Chain\"].json.text }}"
+            },
+            {
+              "name": "metadata",
+              "stringValue": "={{ $node[\"Basic LLM Chain\"].json.metadata }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "af2c0c6b-ccfc-4933-8eef-87475040950c",
+      "name": "Prepare Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        1488,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Daily Operations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Daily Operations": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data": {
+      "main": [
+        [
+          {
+            "node": "Save to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "YOUR_WORKFLOW_VERSION_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "Sfl0bUG3FnnTTrXV",
+  "tags": []
+}

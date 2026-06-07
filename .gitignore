@@ -1,0 +1,18 @@
+# Ignore environment files
+.env
+.env.local
+.env.*.local
+
+# Node / build
+node_modules
+dist
+build
+.next
+.cache
+.vite
+
+# Test / coverage
+coverage/
+
+# Logs
+*.log
